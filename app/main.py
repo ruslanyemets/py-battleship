@@ -23,7 +23,7 @@ class Ship:
         self.decks = self.create_ship(start, end)
 
     @staticmethod
-    def create_ship(start: tuple[int], end: tuple[int]) -> list:
+    def create_ship(start: tuple[int], end: tuple[int]) -> list[Deck]:
         if start[0] == end[0] and start[1] < end[1]:
             return [
                 Deck(start[0], column)
@@ -51,20 +51,15 @@ class Ship:
 class Battleship:
     def __init__(self, ships: list[tuple]) -> None:
         self.field = self.create_field(ships)
-
-        try:
-            self._validate_field()
-        except ValueError as ve:
-            print(ve)
-            exit()
+        self._validate_field()
 
     @staticmethod
     def create_field(ships: list[tuple]) -> dict:
         ships_list = []
         field_dict = {}
 
-        for ship in ships:
-            ships_list.append(Ship(ship[0], ship[1]))
+        for coordinates in ships:
+            ships_list.append(Ship(coordinates[0], coordinates[1]))
 
         for ship in ships_list:
             for deck in ship.decks:
@@ -73,7 +68,7 @@ class Battleship:
         return field_dict
 
     def fire(self, location: tuple) -> str:
-        if location in self.field.keys():
+        if location in self.field:
             ship = self.field[location]
             ship.fire(location[0], location[1])
             if ship.is_drowned:
@@ -86,8 +81,9 @@ class Battleship:
 
         for row in range(10):
             for column in range(10):
-                if (row, column) in self.field.keys():
-                    ship = self.field[(row, column)]
+                coordinates = (row, column)
+                if coordinates in self.field:
+                    ship = self.field[coordinates]
                     if ship.get_deck(row, column).is_alive:
                         field_string += u"\u25A1" + "\t"
                     else:
@@ -102,11 +98,7 @@ class Battleship:
         print(field_string)
 
     def _validate_field(self) -> None:
-        ships_list = []
-
-        for (row, column) in self.field.keys():
-            ship = self.field[(row, column)]
-            ships_list.append(ship)
+        ships_list = [ship for ship in self.field.values()]
 
         ships_list = list(set(ships_list))
 
